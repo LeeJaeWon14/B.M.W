@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">B.M.W (Bus.Metro.Work)</string>
+    <string name="str_label_station">주변 버스 정류장</string>
+    <string name="str_label_metro">주변 지하철 역</string>
+    <string name="str_permission_denied_message">권한을 허용하지 않으면 앱이 정상적으로 작동하지 않을 수 있습니다.</string>
+    <string name="str_back_operation">한번 더 누르면 종료합니다</string>
+    <string name="str_gps_disabled">GPS가 꺼져있습니다. 활성화 하시겠습니까?</string>
+</resources>
