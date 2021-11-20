@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.example.bmw.R
 import com.example.bmw.databinding.ActivityMainBinding
+import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
@@ -23,10 +24,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var locationManager: LocationManager
 
-    val PERMISSIONS = arrayOf(
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_COARSE_LOCATION
-    )
+//    val PERMISSIONS = arrayOf(
+//        android.Manifest.permission.ACCESS_FINE_LOCATION,
+//        android.Manifest.permission.ACCESS_COARSE_LOCATION
+//    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -34,10 +36,10 @@ class MainActivity : AppCompatActivity() {
         
         actionBar?.hide()
         setSupportActionBar(binding.toolbar)
+        binding.toolbar.title = MyDateUtil.getDate(MyDateUtil.HANGUEL)
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         checkPermission()
-//        val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
         binding.tvNearBusStation.setOnClickListener {
             // GPS로 캐싱된 위치가 없다면 Network로 가져옴
@@ -49,6 +51,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // will add Location Callback .
+
     //permission check
     //출처 : https://github.com/ParkSangGwon/TedPermission
     private fun checkPermission() {
@@ -57,7 +61,6 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, "권한 허용", Toast.LENGTH_SHORT).show()
                 if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     // no-op
-
                 }
                 else {
                     val dlg = AlertDialog.Builder(this@MainActivity)
