@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.location.Location
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -12,8 +13,11 @@ import android.os.Looper
 import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bmw.R
+import com.example.bmw.adapter.BusStationListAdapter
 import com.example.bmw.databinding.ActivityMainBinding
+import com.example.bmw.model.SampleValue
 import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
 import com.gun0912.tedpermission.PermissionListener
@@ -41,13 +45,11 @@ class MainActivity : AppCompatActivity() {
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         checkPermission()
 
-        binding.tvNearBusStation.setOnClickListener {
-            // GPS로 캐싱된 위치가 없다면 Network로 가져옴
-            val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            location?.let {
-                Toast.makeText(this@MainActivity, "${it.longitude} / ${it.latitude}", Toast.LENGTH_SHORT).show()
-                MyLogger.i("${it.longitude} / ${it.latitude}")
-            }
+        initBusStationList()
+        // GPS로 캐싱된 위치가 없다면 Network로 가져옴
+        val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+        location?.let {
+            Toast.makeText(this@MainActivity, "${it.longitude} / ${it.latitude}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -58,7 +60,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkPermission() {
         val permissionListener : PermissionListener = object : PermissionListener {
             override fun onPermissionGranted() { //권한 있음
-                Toast.makeText(this@MainActivity, "권한 허용", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this@MainActivity, "권한 허용", Toast.LENGTH_SHORT).show()
                 if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     // no-op
                 }
@@ -87,6 +89,13 @@ class MainActivity : AppCompatActivity() {
             .setDeniedMessage(getString(R.string.str_permission_denied_message)) //DeniedMessage (Do not granted)
             .setPermissions(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION) //Granted
             .check()
+    }
+
+    private fun initBusStationList() {
+        binding.rvBusStationList.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = BusStationListAdapter(SampleValue.getSampleList())
+        }
     }
 
     private var time : Long = 0
