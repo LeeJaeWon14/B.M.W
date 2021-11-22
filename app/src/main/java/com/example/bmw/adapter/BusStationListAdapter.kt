@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bmw.R
 import com.example.bmw.network.dto.BusDTO
+import com.example.bmw.util.MyLogger
 
 class BusStationListAdapter(private val busList: List<BusDTO>): RecyclerView.Adapter<BusStationListAdapter.BusStationListHolder>() {
     class BusStationListHolder(view: View): RecyclerView.ViewHolder(view) {

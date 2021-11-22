@@ -12,7 +12,8 @@
         android:layout_height="wrap_content"
         android:background="@color/purple_700"
         android:layout_alignParentTop="true"
-        app:titleTextColor="@color/white"/>
+        app:titleTextColor="@color/white"
+        app:subtitleTextColor="@color/white"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -24,10 +25,15 @@
             android:id="@+id/tv_near_bus_station"
             style="@style/TextViewStyle"
             android:text = "@string/str_label_station" />
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_bus_station_list"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/sl_bus_station_list"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content" >
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_bus_station_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     </LinearLayout>
 

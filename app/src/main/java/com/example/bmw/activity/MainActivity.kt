@@ -4,7 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.location.Location
+import android.location.Geocoder
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -22,7 +22,6 @@ import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
-import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -40,17 +39,12 @@ class MainActivity : AppCompatActivity() {
         
         actionBar?.hide()
         setSupportActionBar(binding.toolbar)
-        binding.toolbar.title = MyDateUtil.getDate(MyDateUtil.HANGUEL)
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         checkPermission()
 
-        initBusStationList()
-        // GPS로 캐싱된 위치가 없다면 Network로 가져옴
-        val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-        location?.let {
-            Toast.makeText(this@MainActivity, "${it.longitude} / ${it.latitude}", Toast.LENGTH_SHORT).show()
-        }
+        init()
+
     }
 
     // will add Location Callback .
@@ -62,7 +56,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPermissionGranted() { //권한 있음
 //                Toast.makeText(this@MainActivity, "권한 허용", Toast.LENGTH_SHORT).show()
                 if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    // no-op
+                    initLocation()
                 }
                 else {
                     val dlg = AlertDialog.Builder(this@MainActivity)
@@ -91,10 +85,47 @@ class MainActivity : AppCompatActivity() {
             .check()
     }
 
-    private fun initBusStationList() {
-        binding.rvBusStationList.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = BusStationListAdapter(SampleValue.getSampleList())
+    private fun init() {
+        binding.apply {
+            rvBusStationList.apply {
+                layoutManager = LinearLayoutManager(this@MainActivity)
+                adapter = BusStationListAdapter(SampleValue.getSampleList())
+            }
+            slBusStationList.apply {
+                setProgressBackgroundColorSchemeColor(getColor(R.color.purple_500))
+                setColorSchemeColors(getColor(R.color.white))
+                setOnRefreshListener {
+                    rvBusStationList.adapter = BusStationListAdapter(SampleValue.getSampleList())
+                    initLocation()
+                    isRefreshing = false
+                }
+            }
+        }
+    }
+
+    private fun getAddress(latitude: Double, longitude: Double) : String {
+        val address = Geocoder(this@MainActivity).getFromLocation(latitude, longitude, 1)[0].getAddressLine(0).toString()
+        val addressList = address.split(" ")
+        val builder = StringBuilder()
+        for(idx in 1 until  addressList.size) {
+           builder.append("${addressList[idx]} ")
+        }
+        return builder.toString()
+    }
+
+    private fun initLocation() {
+        // GPS 로 캐싱된 위치가 없다면 Network 에서 가져옴
+        try {
+            val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            location?.let {
+//                            Toast.makeText(this@MainActivity, "${it.longitude} / ${it.latitude}", Toast.LENGTH_SHORT).show()
+                binding.toolbar.apply {
+                    title = MyDateUtil.getDate(MyDateUtil.HANGUEL)
+                    subtitle = getAddress(it.latitude, it.longitude)
+                }
+            }
+        } catch (e: SecurityException) {
+            // no-op
         }
     }
 
