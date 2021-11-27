@@ -10,17 +10,19 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/purple_700"
+        android:background="@color/white"
         android:layout_alignParentTop="true"
-        app:titleTextColor="@color/white"
-        app:subtitleTextColor="@color/white"/>
+        app:titleTextColor="@color/black"
+        app:subtitleTextColor="@color/black"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="10dp"
-        android:layout_below="@+id/toolbar">
+        android:layout_below="@+id/toolbar"
+        android:background="@drawable/border_line"
+        android:layout_margin="10dp">
         <TextView
             android:id="@+id/tv_near_bus_station"
             style="@style/TextViewStyle"

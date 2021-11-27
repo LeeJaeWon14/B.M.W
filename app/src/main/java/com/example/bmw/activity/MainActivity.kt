@@ -4,15 +4,14 @@ import android.Manifest
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.location.Geocoder
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
+import android.location.*
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Vibrator
 import android.provider.Settings
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -31,11 +30,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var locationManager: LocationManager
 
-//    val PERMISSIONS = arrayOf(
-//        android.Manifest.permission.ACCESS_FINE_LOCATION,
-//        android.Manifest.permission.ACCESS_COARSE_LOCATION
-//    )
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -45,13 +39,11 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
         checkPermission()
 
         init()
-
     }
-
-    // will add Location Callback .
 
     //permission check
     //출처 : https://github.com/ParkSangGwon/TedPermission
@@ -107,29 +99,49 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getAddress(latitude: Double, longitude: Double) : String {
-        val address = Geocoder(this@MainActivity).getFromLocation(latitude, longitude, 1)[0].getAddressLine(0).toString()
-        val addressList = address.split(" ")
-        val builder = StringBuilder()
-        for(idx in 1 until  addressList.size) {
-           builder.append("${addressList[idx]} ")
-        }
-        return builder.toString()
-    }
-
     private fun initLocation() {
         // GPS 로 캐싱된 위치가 없다면 Network 에서 가져옴
         try {
+            // set Location Updates
+            locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    6000,
+                    300.0f,
+                    gpsListener
+            )
             val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
 
             location?.let {
-//                            Toast.makeText(this@MainActivity, "${it.longitude} / ${it.latitude}", Toast.LENGTH_SHORT).show()
+                // toolbar initialize
                 binding.toolbar.apply {
                     title = MyDateUtil.getDate(MyDateUtil.HANGUEL)
-                    subtitle = getAddress(it.latitude, it.longitude)
+
+                    // get address for subtitle from GeoCoder
+                    val builder = StringBuilder()
+                    Thread {
+                        val address = Geocoder(this@MainActivity).getFromLocation(it.latitude, it.longitude, 1)[0].getAddressLine(0).toString()
+                        val addressList = address.split(" ")
+
+                        for(idx in 1 until addressList.size) {
+                            builder.append("${addressList[idx]} ")
+                        }
+                        runOnUiThread {
+                            subtitle = builder.toString()
+                        }
+                    }.start()
                 }
+            } ?: run {
+                Toast.makeText(this@MainActivity, "네트워크에 연결해주세요!", Toast.LENGTH_SHORT).show()
+                Handler(Looper.getMainLooper()).postDelayed(Runnable { finishAffinity() }, 1000)
             }
-            VibrateManager.runVibrate(getSystemService(Context.VIBRATOR_SERVICE) as Vibrator)
+
+            // TODO add BUS API
+
+            VibrateManager.runVibrate(
+                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator,
+                longArrayOf(100, 200, 100, 200),
+                VibrateManager.NOT_REPEAT
+            )
         } catch (e: SecurityException) {
             // no-op
         }
@@ -149,7 +161,22 @@ class MainActivity : AppCompatActivity() {
     private val gpsListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             MyLogger.i("latitude = ${location.latitude}, longitude = ${location.longitude}")
-            initLocation()
+            Toast.makeText(this@MainActivity, getString(R.string.str_updated_location), Toast.LENGTH_SHORT).show()
+//            Toast.makeText(this@MainActivity, Geocoder(this@MainActivity).getFromLocation(location.latitude, location.longitude, 1)[0].getAddressLine(0).toString(), Toast.LENGTH_SHORT).show()
+            init()
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_toolbar, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.menu_share -> Toast.makeText(this, getString(R.string.menu_share), Toast.LENGTH_SHORT).show()
+            R.id.menu_info -> Toast.makeText(this, getString(R.string.menu_info), Toast.LENGTH_SHORT).show()
+        }
+        return true
     }
 }
