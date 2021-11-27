@@ -11,6 +11,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Vibrator
 import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -22,6 +23,7 @@ import com.example.bmw.databinding.ActivityMainBinding
 import com.example.bmw.model.SampleValue
 import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
+import com.example.bmw.util.VibrateManager
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
 
@@ -119,6 +121,7 @@ class MainActivity : AppCompatActivity() {
         // GPS 로 캐싱된 위치가 없다면 Network 에서 가져옴
         try {
             val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+
             location?.let {
 //                            Toast.makeText(this@MainActivity, "${it.longitude} / ${it.latitude}", Toast.LENGTH_SHORT).show()
                 binding.toolbar.apply {
@@ -126,6 +129,7 @@ class MainActivity : AppCompatActivity() {
                     subtitle = getAddress(it.latitude, it.longitude)
                 }
             }
+            VibrateManager.runVibrate(getSystemService(Context.VIBRATOR_SERVICE) as Vibrator)
         } catch (e: SecurityException) {
             // no-op
         }
@@ -145,6 +149,7 @@ class MainActivity : AppCompatActivity() {
     private val gpsListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             MyLogger.i("latitude = ${location.latitude}, longitude = ${location.longitude}")
+            initLocation()
         }
     }
 }
