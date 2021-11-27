@@ -5,14 +5,16 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.location.Geocoder
+import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bmw.R
 import com.example.bmw.adapter.BusStationListAdapter
@@ -137,6 +139,12 @@ class MainActivity : AppCompatActivity() {
         }
         else if(System.currentTimeMillis() - time < 2000) {
             this.finishAffinity()
+        }
+    }
+
+    private val gpsListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            MyLogger.i("latitude = ${location.latitude}, longitude = ${location.longitude}")
         }
     }
 }
