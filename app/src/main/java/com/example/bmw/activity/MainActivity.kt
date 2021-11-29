@@ -15,10 +15,13 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bmw.R
 import com.example.bmw.adapter.BusStationListAdapter
 import com.example.bmw.databinding.ActivityMainBinding
+import com.example.bmw.model.LocationViewModel
 import com.example.bmw.model.SampleValue
 import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
@@ -29,6 +32,7 @@ import com.gun0912.tedpermission.TedPermission
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var locationManager: LocationManager
+    private lateinit var viewModel: LocationViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +42,10 @@ class MainActivity : AppCompatActivity() {
         actionBar?.hide()
         setSupportActionBar(binding.toolbar)
 
+        viewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
+        viewModel.location.observe(this, Observer {
+            binding.toolbar.subtitle = it
+        })
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         checkPermission()
@@ -125,9 +133,7 @@ class MainActivity : AppCompatActivity() {
                         for(idx in 1 until addressList.size) {
                             builder.append("${addressList[idx]} ")
                         }
-                        runOnUiThread {
-                            subtitle = builder.toString()
-                        }
+                        viewModel.location.postValue(builder.toString())
                     }.start()
                 }
             } ?: run {
