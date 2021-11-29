@@ -180,7 +180,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_share -> Toast.makeText(this, getString(R.string.menu_share), Toast.LENGTH_SHORT).show()
+            R.id.menu_share -> {
+//                Toast.makeText(this, getString(R.string.menu_share), Toast.LENGTH_SHORT).show()
+                val intent = Intent(Intent.ACTION_SEND)
+                intent.type = "text/plain"
+                intent.putExtra(Intent.EXTRA_TEXT, viewModel.location.value)
+                startActivity(Intent.createChooser(intent, "Shared memo"))
+            }
             R.id.menu_info -> Toast.makeText(this, getString(R.string.menu_info), Toast.LENGTH_SHORT).show()
         }
         return true
