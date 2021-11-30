@@ -8,4 +8,6 @@
     <string name="str_updated_location">위치가 갱신되었습니다.</string>
     <string name="menu_share">공유</string>
     <string name="menu_info">정보</string>
+    <string name="str_need_network_msg">네트워크에 연결해주세요!</string>
+    <string name="str_permission_check_msg">권한을 설정해 주세요.</string>
 </resources>

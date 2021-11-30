@@ -58,7 +58,6 @@ class MainActivity : AppCompatActivity() {
     private fun checkPermission() {
         val permissionListener : PermissionListener = object : PermissionListener {
             override fun onPermissionGranted() { //권한 있음
-//                Toast.makeText(this@MainActivity, "권한 허용", Toast.LENGTH_SHORT).show()
                 if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     initLocation()
                 }
@@ -78,7 +77,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             override fun onPermissionDenied(deniedPermissions: MutableList<String>?) { //권한 없음
-                Toast.makeText(this@MainActivity, "권한을 설정해 주세요.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, getString(R.string.str_permission_check_msg), Toast.LENGTH_SHORT).show()
                 Handler(Looper.getMainLooper()).postDelayed(Runnable { finishAffinity() }, 1000)
             }
         }
@@ -137,7 +136,7 @@ class MainActivity : AppCompatActivity() {
                     }.start()
                 }
             } ?: run {
-                Toast.makeText(this@MainActivity, "네트워크에 연결해주세요!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, getString(R.string.str_need_network_msg), Toast.LENGTH_SHORT).show()
                 Handler(Looper.getMainLooper()).postDelayed(Runnable { finishAffinity() }, 1000)
             }
 
