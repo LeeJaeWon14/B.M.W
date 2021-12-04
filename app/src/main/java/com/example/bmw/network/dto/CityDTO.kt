@@ -1,10 +1,12 @@
 package com.example.bmw.network.dto
 
-import com.google.gson.annotations.Expose
+import com.tickaroo.tikxml.annotation.PropertyElement
+import com.tickaroo.tikxml.annotation.Xml
 
+@Xml
 data class CityDTO(
-        @Expose
+        @PropertyElement(name= "citycode")
         var cityCode: Int,
-        @Expose
+        @PropertyElement(name= "cityname")
         var cityName: String
 )

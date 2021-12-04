@@ -23,11 +23,21 @@ import com.example.bmw.adapter.BusStationListAdapter
 import com.example.bmw.databinding.ActivityMainBinding
 import com.example.bmw.model.LocationViewModel
 import com.example.bmw.model.SampleValue
+import com.example.bmw.network.NetworkConstants
+import com.example.bmw.network.RetroClient
+import com.example.bmw.network.dto.CityDTO
+import com.example.bmw.network.service.BusService
 import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
 import com.example.bmw.util.VibrateManager
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -50,6 +60,7 @@ class MainActivity : AppCompatActivity() {
 
         checkPermission()
 
+        selectCity()
         init()
     }
 
@@ -188,5 +199,29 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_info -> Toast.makeText(this, getString(R.string.menu_info), Toast.LENGTH_SHORT).show()
         }
         return true
+    }
+
+    private fun selectCity() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val service = RetroClient.getInstance().create(BusService::class.java)
+            val call = service?.getCityList(NetworkConstants.BUS_STATION_SERVICE_KEY)
+            call?.enqueue(object : Callback<List<CityDTO>> {
+                override fun onResponse(
+                    call: Call<List<CityDTO>>,
+                    response: Response<List<CityDTO>>
+                ) {
+                    if(response.isSuccessful) {
+                        MyLogger.i("rest success >> ${response.body()}")
+                    }
+                    else {
+                        MyLogger.e("rest response error >> code is ${response.code()} and request here, ${response.raw().request()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<List<CityDTO>>, t: Throwable) {
+                    MyLogger.e("rest fail >> ${t.message}")
+                }
+            })
+        }
     }
 }
