@@ -8,6 +8,10 @@ class LocationViewModel : ViewModel() {
         MutableLiveData<String>()
     }
 
+    val cityCode: MutableLiveData<Int> by lazy {
+        MutableLiveData<Int>()
+    }
+
     var longitude: Double = 0.0
     var latitude: Double = 0.0
 }

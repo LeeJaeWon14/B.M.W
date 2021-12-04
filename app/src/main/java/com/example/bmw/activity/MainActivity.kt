@@ -167,7 +167,6 @@ class MainActivity : AppCompatActivity() {
         override fun onLocationChanged(location: Location) {
             MyLogger.i("latitude = ${location.latitude}, longitude = ${location.longitude}")
             Toast.makeText(this@MainActivity, getString(R.string.str_updated_location), Toast.LENGTH_SHORT).show()
-//            Toast.makeText(this@MainActivity, Geocoder(this@MainActivity).getFromLocation(location.latitude, location.longitude, 1)[0].getAddressLine(0).toString(), Toast.LENGTH_SHORT).show()
             init()
         }
     }
