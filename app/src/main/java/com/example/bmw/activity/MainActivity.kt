@@ -26,6 +26,7 @@ import com.example.bmw.model.SampleValue
 import com.example.bmw.network.NetworkConstants
 import com.example.bmw.network.RetroClient
 import com.example.bmw.network.dto.CityDTO
+import com.example.bmw.network.dto.StationDTO
 import com.example.bmw.network.service.BusService
 import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
@@ -146,12 +147,30 @@ class MainActivity : AppCompatActivity() {
                         viewModel.location.postValue(builder.toString())
                     }.start()
                 }
+
+                val service = RetroClient.getInstance().create(BusService::class.java)
+                val call = service?.getNearStation(NetworkConstants.BUS_STATION_SERVICE_KEY, it.latitude, it.longitude)
+                call?.enqueue(object : Callback<StationDTO> {
+                    override fun onResponse(call: Call<StationDTO>, response: Response<StationDTO>) {
+                        if(response.isSuccessful) {
+                            MyLogger.i("Rest success, response is ${response.body()}")
+                        }
+                        else {
+                            MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<StationDTO>, t: Throwable) {
+                        MyLogger.e("Rest failure ${t.message}")
+                    }
+                })
             } ?: run {
                 Toast.makeText(this@MainActivity, getString(R.string.str_need_network_msg), Toast.LENGTH_SHORT).show()
                 Handler(Looper.getMainLooper()).postDelayed(Runnable { finishAffinity() }, 1000)
             }
 
             // TODO add BUS API
+
 
             VibrateManager.runVibrate(
                 getSystemService(Context.VIBRATOR_SERVICE) as Vibrator,
