@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id = "@+id/tv_bus_arrive_name"
+        style="@style/TextViewStyle"
+        tools:text = "노선번호"
+        android:textStyle="normal"
+        android:layout_width="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:id = "@+id/tv_bus_arrive_time"
+        style="@style/TextViewStyle"
+        tools:text = "도착예상시간"
+        android:textStyle="normal"
+        android:layout_width="wrap_content"/>
+
+</LinearLayout>

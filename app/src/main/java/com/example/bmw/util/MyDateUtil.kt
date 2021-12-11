@@ -14,6 +14,22 @@ object MyDateUtil {
         return SimpleDateFormat(format, Locale.KOREA).format(date)
     }
 
+    fun convertSec(sec: Long) : String {
+        when {
+            sec >= 3600 -> {
+
+            }
+            sec in 60..3599 -> {
+
+            }
+            else -> {
+
+            }
+        }
+
+        return ""
+    }
+
 
     /*
     패턴 의미 출력

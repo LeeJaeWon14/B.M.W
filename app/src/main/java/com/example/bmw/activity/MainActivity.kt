@@ -221,7 +221,6 @@ class MainActivity : AppCompatActivity() {
                         override fun onResponse(call: Call<Station>, response: Response<Station>) {
                             if (response.isSuccessful) {
                                 MyLogger.i("Rest success, response is ${response.body()}")
-                                MyLogger.i("request is ${response.raw().request()}")
                                 stationList.postValue(response.body()?.body?.items?.item)
                             } else {
                                 MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
