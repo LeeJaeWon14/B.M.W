@@ -6,10 +6,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bmw.R
-import com.example.bmw.network.dto.BusDTO
-import com.example.bmw.util.MyLogger
+import com.example.bmw.network.dto.StationDTO
 
-class BusStationListAdapter(private val busList: List<BusDTO>): RecyclerView.Adapter<BusStationListAdapter.BusStationListHolder>() {
+class BusStationListAdapter(private val busList: List<StationDTO>): RecyclerView.Adapter<BusStationListAdapter.BusStationListHolder>() {
     class BusStationListHolder(view: View): RecyclerView.ViewHolder(view) {
         val tvStationName: TextView = view.findViewById(R.id.tv_bus_station_name)
         val rvBusList: RecyclerView = view.findViewById(R.id.rv_bus_list)
@@ -21,7 +20,8 @@ class BusStationListAdapter(private val busList: List<BusDTO>): RecyclerView.Ada
     }
 
     override fun onBindViewHolder(holder: BusStationListHolder, position: Int) {
-        holder.tvStationName.text = busList[position].name
+        holder.tvStationName.text = busList[position].nodeName
+
     }
 
     override fun getItemCount(): Int {

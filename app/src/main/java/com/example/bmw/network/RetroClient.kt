@@ -1,5 +1,6 @@
 package com.example.bmw.network
 
+import com.tickaroo.tikxml.TikXml
 import com.tickaroo.tikxml.retrofit.TikXmlConverterFactory
 import retrofit2.Retrofit
 
@@ -12,7 +13,7 @@ object RetroClient {
             instance = Retrofit.Builder()
                     .baseUrl(NetworkConstants.BASE_URL)
 //                    .addConverterFactory(GsonConverterFactory.create())
-                    .addConverterFactory(TikXmlConverterFactory.create())
+                    .addConverterFactory(TikXmlConverterFactory.create(TikXml.Builder().exceptionOnUnreadXml(false).build()))
                     .build()
             return instance!!
         }

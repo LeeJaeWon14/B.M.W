@@ -22,11 +22,10 @@ import com.example.bmw.R
 import com.example.bmw.adapter.BusStationListAdapter
 import com.example.bmw.databinding.ActivityMainBinding
 import com.example.bmw.model.LocationViewModel
-import com.example.bmw.model.SampleValue
 import com.example.bmw.network.NetworkConstants
 import com.example.bmw.network.RetroClient
 import com.example.bmw.network.dto.CityDTO
-import com.example.bmw.network.dto.StationDTO
+import com.example.bmw.network.dto.Station
 import com.example.bmw.network.service.BusService
 import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
@@ -54,14 +53,11 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
 
         viewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
-        viewModel.location.observe(this, Observer {
-            binding.toolbar.subtitle = it
-        })
+        // viewModel observe to update
+        observeViewModel()
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         checkPermission()
-
-        selectCity()
         init()
     }
 
@@ -102,15 +98,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun init() {
         binding.apply {
-            rvBusStationList.apply {
-                layoutManager = LinearLayoutManager(this@MainActivity)
-                adapter = BusStationListAdapter(SampleValue.getSampleList())
-            }
+            rvBusStationList.layoutManager = LinearLayoutManager(this@MainActivity)
             slBusStationList.apply {
                 setProgressBackgroundColorSchemeColor(getColor(R.color.purple_500))
                 setColorSchemeColors(getColor(R.color.white))
                 setOnRefreshListener {
-                    rvBusStationList.adapter = BusStationListAdapter(SampleValue.getSampleList())
                     initLocation()
                     isRefreshing = false
                 }
@@ -129,54 +121,7 @@ class MainActivity : AppCompatActivity() {
                     gpsListener
             )
             val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-
-            location?.let {
-                // toolbar initialize
-                binding.toolbar.apply {
-                    title = MyDateUtil.getDate(MyDateUtil.HANGUEL)
-
-                    // get address for subtitle from GeoCoder
-                    val builder = StringBuilder()
-                    Thread {
-                        val address = Geocoder(this@MainActivity).getFromLocation(it.latitude, it.longitude, 1)[0].getAddressLine(0).toString()
-                        val addressList = address.split(" ")
-
-                        for(idx in 1 until addressList.size) {
-                            builder.append("${addressList[idx]} ")
-                        }
-                        viewModel.location.postValue(builder.toString())
-                    }.start()
-                }
-
-                val service = RetroClient.getInstance().create(BusService::class.java)
-                val call = service?.getNearStation(NetworkConstants.BUS_STATION_SERVICE_KEY, it.latitude, it.longitude)
-                call?.enqueue(object : Callback<StationDTO> {
-                    override fun onResponse(call: Call<StationDTO>, response: Response<StationDTO>) {
-                        if(response.isSuccessful) {
-                            MyLogger.i("Rest success, response is ${response.body()}")
-                        }
-                        else {
-                            MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
-                        }
-                    }
-
-                    override fun onFailure(call: Call<StationDTO>, t: Throwable) {
-                        MyLogger.e("Rest failure ${t.message}")
-                    }
-                })
-            } ?: run {
-                Toast.makeText(this@MainActivity, getString(R.string.str_need_network_msg), Toast.LENGTH_SHORT).show()
-                Handler(Looper.getMainLooper()).postDelayed(Runnable { finishAffinity() }, 1000)
-            }
-
-            // TODO add BUS API
-
-
-            VibrateManager.runVibrate(
-                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator,
-                longArrayOf(100, 200, 100, 200),
-                VibrateManager.NOT_REPEAT
-            )
+            viewModel.location.value = location
         } catch (e: SecurityException) {
             // no-op
         }
@@ -195,9 +140,8 @@ class MainActivity : AppCompatActivity() {
 
     private val gpsListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
-            MyLogger.i("latitude = ${location.latitude}, longitude = ${location.longitude}")
+            viewModel.location.value = location
             Toast.makeText(this@MainActivity, getString(R.string.str_updated_location), Toast.LENGTH_SHORT).show()
-            init()
         }
     }
 
@@ -212,7 +156,7 @@ class MainActivity : AppCompatActivity() {
 //                Toast.makeText(this, getString(R.string.menu_share), Toast.LENGTH_SHORT).show()
                 val intent = Intent(Intent.ACTION_SEND)
                 intent.type = "text/plain"
-                intent.putExtra(Intent.EXTRA_TEXT, viewModel.location.value)
+                intent.putExtra(Intent.EXTRA_TEXT, viewModel.address.value)
                 startActivity(Intent.createChooser(intent, "Shared memo"))
             }
             R.id.menu_info -> Toast.makeText(this, getString(R.string.menu_info), Toast.LENGTH_SHORT).show()
@@ -240,6 +184,66 @@ class MainActivity : AppCompatActivity() {
                 override fun onFailure(call: Call<List<CityDTO>>, t: Throwable) {
                     MyLogger.e("rest fail >> ${t.message}")
                 }
+            })
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.run {
+            address.observe(this@MainActivity, Observer {
+                binding.toolbar.subtitle = it
+            })
+
+            location.observe(this@MainActivity, Observer {
+                MyLogger.i("latitude = ${it.latitude}, longitude = ${it.longitude}")
+
+                // toolbar initialize
+                binding.toolbar.apply {
+                    title = MyDateUtil.getDate(MyDateUtil.HANGUEL)
+
+                    // get address for subtitle from GeoCoder
+                    val builder = StringBuilder()
+                    Thread {
+                        val address = Geocoder(this@MainActivity).getFromLocation(it.latitude, it.longitude, 1)[0].getAddressLine(0).toString()
+                        val addressList = address.split(" ")
+
+                        for(idx in 1 until addressList.size) {
+                            builder.append("${addressList[idx]} ")
+                        }
+                        viewModel.address.postValue(builder.toString())
+                    }.start()
+                }
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    val service = RetroClient.getInstance().create(BusService::class.java)
+                    val call = service?.getNearStation(NetworkConstants.BUS_STATION_SERVICE_KEY, it.latitude, it.longitude)
+                    call?.enqueue(object : Callback<Station> {
+                        override fun onResponse(call: Call<Station>, response: Response<Station>) {
+                            if (response.isSuccessful) {
+                                MyLogger.i("Rest success, response is ${response.body()}")
+                                MyLogger.i("request is ${response.raw().request()}")
+                                stationList.postValue(response.body()?.body?.items?.item)
+                            } else {
+                                MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
+                            }
+                        }
+
+                        override fun onFailure(call: Call<Station>, t: Throwable) {
+                            MyLogger.e("Rest failure ${t.message}")
+                            MyLogger.e("Rest failure ${call.request()}")
+                        }
+                    })
+                }
+
+                VibrateManager.runVibrate(
+                        getSystemService(Context.VIBRATOR_SERVICE) as Vibrator,
+                        longArrayOf(100, 200, 100, 200),
+                        VibrateManager.NOT_REPEAT
+                )
+            })
+
+            stationList.observe(this@MainActivity, Observer {
+                binding.rvBusStationList.adapter = BusStationListAdapter(it)
             })
         }
     }
