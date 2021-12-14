@@ -23,21 +23,22 @@ import com.example.bmw.adapter.BusStationListAdapter
 import com.example.bmw.databinding.ActivityMainBinding
 import com.example.bmw.model.LocationViewModel
 import com.example.bmw.network.NetworkConstants
-import com.example.bmw.network.RetroClient
-import com.example.bmw.network.dto.CityDTO
-import com.example.bmw.network.dto.Station
+import com.example.bmw.network.dto.ServiceResult
 import com.example.bmw.network.service.BusService
 import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
 import com.example.bmw.util.VibrateManager
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.TedPermission
+import com.tickaroo.tikxml.TikXml
+import com.tickaroo.tikxml.retrofit.TikXmlConverterFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import retrofit2.Retrofit
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -164,30 +165,6 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun selectCity() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val service = RetroClient.getInstance().create(BusService::class.java)
-            val call = service?.getCityList(NetworkConstants.BUS_STATION_SERVICE_KEY)
-            call?.enqueue(object : Callback<List<CityDTO>> {
-                override fun onResponse(
-                    call: Call<List<CityDTO>>,
-                    response: Response<List<CityDTO>>
-                ) {
-                    if(response.isSuccessful) {
-                        MyLogger.i("rest success >> ${response.body()}")
-                    }
-                    else {
-                        MyLogger.e("rest response error >> code is ${response.code()} and request here, ${response.raw().request()}")
-                    }
-                }
-
-                override fun onFailure(call: Call<List<CityDTO>>, t: Throwable) {
-                    MyLogger.e("rest fail >> ${t.message}")
-                }
-            })
-        }
-    }
-
     private fun observeViewModel() {
         viewModel.run {
             address.observe(this@MainActivity, Observer {
@@ -207,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                         val address = Geocoder(this@MainActivity).getFromLocation(it.latitude, it.longitude, 1)[0].getAddressLine(0).toString()
                         val addressList = address.split(" ")
 
-                        for(idx in 1 until addressList.size) {
+                        for (idx in 1 until addressList.size) {
                             builder.append("${addressList[idx]} ")
                         }
                         viewModel.address.postValue(builder.toString())
@@ -215,23 +192,57 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    val service = RetroClient.getInstance().create(BusService::class.java)
-                    val call = service?.getNearStation(NetworkConstants.BUS_STATION_SERVICE_KEY, it.latitude, it.longitude)
-                    call?.enqueue(object : Callback<Station> {
-                        override fun onResponse(call: Call<Station>, response: Response<Station>) {
-                            if (response.isSuccessful) {
-                                MyLogger.i("Rest success, response is ${response.body()}")
-                                stationList.postValue(response.body()?.body?.items?.item)
-                            } else {
-                                MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
+                    // 현재 위치가 서울인 경우
+                    run {
+                        val service = Retrofit.Builder()
+                            .baseUrl(NetworkConstants.BASE_URL_SEOUL)
+                            .addConverterFactory(TikXmlConverterFactory.create(TikXml.Builder().exceptionOnUnreadXml(false).build()))
+                            .build().create(BusService::class.java)
+                        val call = service?.getNearStationInSeoul(NetworkConstants.BUS_STATION_SERVICE_KEY, it.longitude, it.latitude)
+                        call?.enqueue(object : Callback<ServiceResult> {
+                            override fun onResponse(
+                                call: Call<ServiceResult>,
+                                response: Response<ServiceResult>
+                            ) {
+                                if (response.isSuccessful) {
+                                    MyLogger.i("Rest success, response is ${response.body()}")
+                                    seoulList.postValue(response.body()?.msgBody?.itemList)
+                                } else {
+                                    MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
+                                    Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_null_msg), Toast.LENGTH_SHORT).show()
+                                }
                             }
-                        }
 
-                        override fun onFailure(call: Call<Station>, t: Throwable) {
-                            MyLogger.e("Rest failure ${t.message}")
-                            MyLogger.e("Rest failure ${call.request()}")
-                        }
-                    })
+                            override fun onFailure(call: Call<ServiceResult>, t: Throwable) {
+                                Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
+                                MyLogger.e("Rest failure ${t.message}")
+                                MyLogger.e("Rest failure ${call.request()}")
+                            }
+                        })
+                    }
+//                    // 서울 외인 경우
+//                    else {
+//                        val service = RetroClient.getInstance().create(BusService::class.java)
+//                        val call = service?.getNearStation(NetworkConstants.BUS_STATION_SERVICE_KEY, it.latitude, it.longitude)
+//                        call?.enqueue(object : Callback<Station> {
+//                            override fun onResponse(call: Call<Station>, response: Response<Station>) {
+//                                if (response.isSuccessful) {
+//                                    MyLogger.i("Rest success, response is ${response.body()}")
+//                                    stationList.postValue(response.body()?.body?.items?.item)
+//                                } else {
+//                                    MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
+//                                    Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_null_msg), Toast.LENGTH_SHORT).show()
+//                                }
+//                            }
+//
+//                            override fun onFailure(call: Call<Station>, t: Throwable) {
+//                                Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
+//                                MyLogger.e("Rest failure ${t.message}")
+//                                MyLogger.e("Rest failure ${call.request()}")
+//                            }
+//                        })
+//                    }
+
                 }
 
                 VibrateManager.runVibrate(
@@ -242,7 +253,11 @@ class MainActivity : AppCompatActivity() {
             })
 
             stationList.observe(this@MainActivity, Observer {
-                binding.rvBusStationList.adapter = BusStationListAdapter(it)
+                binding.rvBusStationList.adapter = BusStationListAdapter(it.toTypedArray())
+            })
+
+            seoulList.observe(this@MainActivity, Observer {
+                binding.rvBusStationList.adapter = BusStationListAdapter(it.toTypedArray())
             })
         }
     }

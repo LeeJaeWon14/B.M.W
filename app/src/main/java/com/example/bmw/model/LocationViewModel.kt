@@ -3,6 +3,7 @@ package com.example.bmw.model
 import android.location.Location
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.bmw.network.dto.SeoulDTO
 import com.example.bmw.network.dto.StationDTO
 
 class LocationViewModel : ViewModel() {
@@ -20,5 +21,9 @@ class LocationViewModel : ViewModel() {
 
     val stationList: MutableLiveData<List<StationDTO>> by lazy {
         MutableLiveData<List<StationDTO>>()
+    }
+
+    val  seoulList: MutableLiveData<List<SeoulDTO>> by lazy {
+        MutableLiveData<List<SeoulDTO>>()
     }
 }

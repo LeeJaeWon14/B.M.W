@@ -8,9 +8,18 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bmw.R
+import com.example.bmw.network.dto.SeoulDTO
 import com.example.bmw.network.dto.StationDTO
 
-class BusStationListAdapter(private val busList: List<StationDTO>) : RecyclerView.Adapter<BusStationListAdapter.BusStationListHolder>() {
+class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusStationListHolder>() {
+    constructor(busList: Array<StationDTO>) : this() {
+        this.busList = busList
+    }
+    constructor(seoulList: Array<SeoulDTO>) : this() {
+        this.seoulList = seoulList
+    }
+    private var busList: Array<StationDTO>? = null
+    private var seoulList: Array<SeoulDTO>? = null
     private lateinit var context: Context
     class BusStationListHolder(view: View): RecyclerView.ViewHolder(view) {
         val tvStationName: TextView = view.findViewById(R.id.tv_bus_station_name)
@@ -24,14 +33,25 @@ class BusStationListAdapter(private val busList: List<StationDTO>) : RecyclerVie
     }
 
     override fun onBindViewHolder(holder: BusStationListHolder, position: Int) {
-        holder.tvStationName.text = busList[position].nodeName
-        holder.rvBusList.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = null
+        holder.apply {
+            busList?.let {
+                tvStationName.text = it[position].nodeName
+                rvBusList.apply {
+                    layoutManager = LinearLayoutManager(context)
+                    adapter = null
+                }
+            }
+            seoulList?.let {
+                tvStationName.text = it[position].stationNm
+                rvBusList.apply {
+                    layoutManager = LinearLayoutManager(context)
+                    adapter = null
+                }
+            }
         }
     }
 
     override fun getItemCount(): Int {
-        return busList.size
+        return (busList?.size ?: seoulList?.size)!!
     }
 }
