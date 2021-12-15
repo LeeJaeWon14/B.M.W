@@ -12,4 +12,7 @@
     <string name="str_permission_check_msg">권한을 설정해 주세요.</string>
     <string name="str_get_near_station_fail_msg">정류장 정보를 가져오는데 실패하였습니다.</string>
     <string name="str_get_near_station_null_msg">주변에 정류장이 없습니다.</string>
+    <string name="str_rest_fail_message_1">unexpected end of stream</string>
+    <string name="str_rest_fail_message_2">Parameter specified as non-null is null: method kotlin.jvm.internal.Intrinsics.checkNotNullParameter, parameter item</string>
+    <string name="str_not_supported_area">지원하지 않는 지역입니다.</string>
 </resources>

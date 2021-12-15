@@ -156,11 +156,10 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_share -> {
-//                Toast.makeText(this, getString(R.string.menu_share), Toast.LENGTH_SHORT).show()
                 val intent = Intent(Intent.ACTION_SEND)
                 intent.type = "text/plain"
                 intent.putExtra(Intent.EXTRA_TEXT, viewModel.address.value)
-                startActivity(Intent.createChooser(intent, "Shared memo"))
+                startActivity(Intent.createChooser(intent, ""))
             }
             R.id.menu_info -> Toast.makeText(this, getString(R.string.menu_info), Toast.LENGTH_SHORT).show()
         }
@@ -194,7 +193,7 @@ class MainActivity : AppCompatActivity() {
 
                         CoroutineScope(Dispatchers.IO).launch {
                             // 현재 위치가 서울인 경우
-                            if(builder.toString().contains("서울")) {
+                            if (builder.toString().contains("서울")) {
                                 val service = Retrofit.Builder()
                                         .baseUrl(NetworkConstants.BASE_URL_SEOUL)
                                         .addConverterFactory(TikXmlConverterFactory.create(TikXml.Builder().exceptionOnUnreadXml(false).build()))
@@ -237,14 +236,22 @@ class MainActivity : AppCompatActivity() {
                                     }
 
                                     override fun onFailure(call: Call<Station>, t: Throwable) {
-                                        if (t.message.equals("unexpected end of stream")) {
-                                            // When occurred unexpected end of stream, retry call.
-                                            call.clone().enqueue(this)
-                                        }
-                                        else {
-                                            Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
-                                            MyLogger.e("Rest failure ${t.message}")
-                                            MyLogger.e("Rest failure ${call.request()}")
+                                        when (t.message) {
+                                            getString(R.string.str_rest_fail_message_1) -> {
+                                                // When occurred unexpected end of stream, retry call
+//                                                but we don't have limit retry count yet, will adding that.
+                                                call.clone().enqueue(this)
+                                            }
+                                            getString(R.string.str_rest_fail_message_2) -> {
+                                                // 확인된 미지원 지역: 부산
+                                                Toast.makeText(this@MainActivity, getString(R.string.str_not_supported_area), Toast.LENGTH_SHORT).show()
+                                                binding.rvBusStationList.adapter = null
+                                            }
+                                            else -> {
+                                                Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
+                                                MyLogger.e("Rest failure ${t.message}")
+                                                MyLogger.e("Rest failure ${call.request()}")
+                                            }
                                         }
                                     }
                                 })
