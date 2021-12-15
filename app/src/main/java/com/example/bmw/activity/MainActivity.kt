@@ -214,9 +214,14 @@ class MainActivity : AppCompatActivity() {
                                     }
 
                                     override fun onFailure(call: Call<ServiceResult>, t: Throwable) {
-                                        Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
-                                        MyLogger.e("Rest failure ${t.message}")
-                                        MyLogger.e("Rest failure ${call.request()}")
+                                        if(t.message == "Missing closing '>' character in </ServiceResult at path /ServiceResult/text()") {
+                                            call.clone().enqueue(this)
+                                        }
+                                        else {
+                                            Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
+                                            MyLogger.e("Rest failure ${t.message}")
+                                            MyLogger.e("Rest failure ${call.request()}")
+                                        }
                                     }
                                 })
                             }
