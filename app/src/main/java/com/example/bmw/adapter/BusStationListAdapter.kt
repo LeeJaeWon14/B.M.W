@@ -34,6 +34,7 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
 
     override fun onBindViewHolder(holder: BusStationListHolder, position: Int) {
         holder.apply {
+            // 서울 외 지역
             busList?.let {
                 tvStationName.text = it[position].nodeName
                 rvBusList.apply {
@@ -41,6 +42,7 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
                     adapter = null
                 }
             }
+            // 서울
             seoulList?.let {
                 tvStationName.text = it[position].stationNm
                 rvBusList.apply {

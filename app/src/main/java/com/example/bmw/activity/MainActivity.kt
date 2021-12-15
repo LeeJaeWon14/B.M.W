@@ -23,7 +23,9 @@ import com.example.bmw.adapter.BusStationListAdapter
 import com.example.bmw.databinding.ActivityMainBinding
 import com.example.bmw.model.LocationViewModel
 import com.example.bmw.network.NetworkConstants
+import com.example.bmw.network.RetroClient
 import com.example.bmw.network.dto.ServiceResult
+import com.example.bmw.network.dto.Station
 import com.example.bmw.network.service.BusService
 import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
@@ -182,68 +184,76 @@ class MainActivity : AppCompatActivity() {
                     val builder = StringBuilder()
                     Thread {
                         val address = Geocoder(this@MainActivity).getFromLocation(it.latitude, it.longitude, 1)[0].getAddressLine(0).toString()
+                        MyLogger.e("Now address >> $address")
                         val addressList = address.split(" ")
 
                         for (idx in 1 until addressList.size) {
                             builder.append("${addressList[idx]} ")
                         }
                         viewModel.address.postValue(builder.toString())
+
+                        CoroutineScope(Dispatchers.IO).launch {
+                            // 현재 위치가 서울인 경우
+                            if(builder.toString().contains("서울")) {
+                                val service = Retrofit.Builder()
+                                        .baseUrl(NetworkConstants.BASE_URL_SEOUL)
+                                        .addConverterFactory(TikXmlConverterFactory.create(TikXml.Builder().exceptionOnUnreadXml(false).build()))
+                                        .build().create(BusService::class.java)
+                                val call = service?.getNearStationInSeoul(NetworkConstants.BUS_STATION_SERVICE_KEY, it.longitude, it.latitude)
+                                call?.enqueue(object : Callback<ServiceResult> {
+                                    override fun onResponse(
+                                            call: Call<ServiceResult>,
+                                            response: Response<ServiceResult>
+                                    ) {
+                                        if (response.isSuccessful) {
+                                            MyLogger.i("Rest success, response is ${response.body()}")
+                                            seoulList.postValue(response.body()?.msgBody?.itemList)
+                                        } else {
+                                            MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
+                                            Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_null_msg), Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+
+                                    override fun onFailure(call: Call<ServiceResult>, t: Throwable) {
+                                        Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
+                                        MyLogger.e("Rest failure ${t.message}")
+                                        MyLogger.e("Rest failure ${call.request()}")
+                                    }
+                                })
+                            }
+                            // 서울 외인 경우
+                            else {
+                                val service = RetroClient.getInstance().create(BusService::class.java)
+                                val call = service?.getNearStation(NetworkConstants.BUS_STATION_SERVICE_KEY, it.latitude, it.longitude)
+                                call?.enqueue(object : Callback<Station> {
+                                    override fun onResponse(call: Call<Station>, response: Response<Station>) {
+                                        if (response.isSuccessful) {
+                                            MyLogger.i("Rest success, response is ${response.body()}")
+                                            stationList.postValue(response.body()?.body?.items?.item)
+                                        } else {
+                                            MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
+                                            Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_null_msg), Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+
+                                    override fun onFailure(call: Call<Station>, t: Throwable) {
+                                        if (t.message.equals("unexpected end of stream")) {
+                                            // When occurred unexpected end of stream, retry call.
+                                            call.clone().enqueue(this)
+                                        }
+                                        else {
+                                            Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
+                                            MyLogger.e("Rest failure ${t.message}")
+                                            MyLogger.e("Rest failure ${call.request()}")
+                                        }
+                                    }
+                                })
+                            }
+                        }
                     }.start()
                 }
 
-                CoroutineScope(Dispatchers.IO).launch {
-                    // 현재 위치가 서울인 경우
-                    run {
-                        val service = Retrofit.Builder()
-                            .baseUrl(NetworkConstants.BASE_URL_SEOUL)
-                            .addConverterFactory(TikXmlConverterFactory.create(TikXml.Builder().exceptionOnUnreadXml(false).build()))
-                            .build().create(BusService::class.java)
-                        val call = service?.getNearStationInSeoul(NetworkConstants.BUS_STATION_SERVICE_KEY, it.longitude, it.latitude)
-                        call?.enqueue(object : Callback<ServiceResult> {
-                            override fun onResponse(
-                                call: Call<ServiceResult>,
-                                response: Response<ServiceResult>
-                            ) {
-                                if (response.isSuccessful) {
-                                    MyLogger.i("Rest success, response is ${response.body()}")
-                                    seoulList.postValue(response.body()?.msgBody?.itemList)
-                                } else {
-                                    MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
-                                    Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_null_msg), Toast.LENGTH_SHORT).show()
-                                }
-                            }
 
-                            override fun onFailure(call: Call<ServiceResult>, t: Throwable) {
-                                Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
-                                MyLogger.e("Rest failure ${t.message}")
-                                MyLogger.e("Rest failure ${call.request()}")
-                            }
-                        })
-                    }
-//                    // 서울 외인 경우
-//                    else {
-//                        val service = RetroClient.getInstance().create(BusService::class.java)
-//                        val call = service?.getNearStation(NetworkConstants.BUS_STATION_SERVICE_KEY, it.latitude, it.longitude)
-//                        call?.enqueue(object : Callback<Station> {
-//                            override fun onResponse(call: Call<Station>, response: Response<Station>) {
-//                                if (response.isSuccessful) {
-//                                    MyLogger.i("Rest success, response is ${response.body()}")
-//                                    stationList.postValue(response.body()?.body?.items?.item)
-//                                } else {
-//                                    MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
-//                                    Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_null_msg), Toast.LENGTH_SHORT).show()
-//                                }
-//                            }
-//
-//                            override fun onFailure(call: Call<Station>, t: Throwable) {
-//                                Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
-//                                MyLogger.e("Rest failure ${t.message}")
-//                                MyLogger.e("Rest failure ${call.request()}")
-//                            }
-//                        })
-//                    }
-
-                }
 
                 VibrateManager.runVibrate(
                         getSystemService(Context.VIBRATOR_SERVICE) as Vibrator,
