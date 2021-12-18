@@ -6,6 +6,7 @@ object NetworkConstants {
     const val BASE_URL = "http://openapi.tago.go.kr/openapi/service/"
     const val SELECT_CITY = "BusSttnInfoInqireService/getCtyCodeList"
     const val GET_NEAR_STATION = "BusSttnInfoInqireService/getCrdntPrxmtSttnList"
+    const val ARRIVE_INFO = "ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList"
 
     // 서울
     const val BASE_URL_SEOUL = "http://ws.bus.go.kr/api/rest/stationinfo/"

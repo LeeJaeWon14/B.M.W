@@ -8,8 +8,17 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bmw.R
+import com.example.bmw.network.NetworkConstants
+import com.example.bmw.network.RetroClient
+import com.example.bmw.network.dto.ArriveDTO
+import com.example.bmw.network.dto.ArriveResponse
 import com.example.bmw.network.dto.SeoulDTO
 import com.example.bmw.network.dto.StationDTO
+import com.example.bmw.network.service.BusService
+import com.example.bmw.util.MyLogger
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusStationListHolder>() {
     constructor(busList: Array<StationDTO>) : this() {
@@ -21,6 +30,7 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
     private var busList: Array<StationDTO>? = null
     private var seoulList: Array<SeoulDTO>? = null
     private lateinit var context: Context
+    private lateinit var arriveInfo: ArriveDTO
     class BusStationListHolder(view: View): RecyclerView.ViewHolder(view) {
         val tvStationName: TextView = view.findViewById(R.id.tv_bus_station_name)
         val rvBusList: RecyclerView = view.findViewById(R.id.rv_bus_list)
@@ -38,8 +48,25 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
             busList?.let {
                 tvStationName.text = it[position].nodeName
                 rvBusList.apply {
-                    layoutManager = LinearLayoutManager(context)
-                    adapter = null
+                    val service = RetroClient.getInstance().create(BusService::class.java)
+                    val call = service.getArriveInfo(NetworkConstants.BUS_STATION_SERVICE_KEY, it[position].cityCode.toString(), it[position].nodeId.toString())
+                    call.enqueue(object : Callback<ArriveResponse> {
+                        override fun onResponse(call: Call<ArriveResponse>, response: Response<ArriveResponse>) {
+                            response.body()?.body?.items?.item?.let {
+                                layoutManager = LinearLayoutManager(context)
+                                adapter = BusArriveListAdapter(it)
+                            } ?: run {
+                                MyLogger.e("Rest response is null")
+                                layoutManager = LinearLayoutManager(context)
+                                adapter = BusArriveListAdapter(null)
+                            }
+                        }
+
+                        override fun onFailure(call: Call<ArriveResponse>, t: Throwable) {
+                            MyLogger.e("Rest failure ${t.message}")
+                            MyLogger.e("Rest failure ${call.request()}")
+                        }
+                    })
                 }
             }
             // 서울
@@ -55,5 +82,9 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
 
     override fun getItemCount(): Int {
         return (busList?.size ?: seoulList?.size)!!
+    }
+
+    private fun initArriveList(station: StationDTO) {
+
     }
 }

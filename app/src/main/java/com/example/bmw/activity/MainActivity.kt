@@ -281,6 +281,10 @@ class MainActivity : AppCompatActivity() {
             seoulList.observe(this@MainActivity, Observer {
                 binding.rvBusStationList.adapter = BusStationListAdapter(it.toTypedArray())
             })
+
+            arriveList.observe(this@MainActivity, Observer {
+
+            })
         }
     }
 }
