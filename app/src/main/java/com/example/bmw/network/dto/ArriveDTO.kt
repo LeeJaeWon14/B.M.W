@@ -9,7 +9,7 @@ data class ArriveResponse(
         @Element
         var header: ArriveHeader,
 
-        @Element
+        @Element(name = "body")
         var body: ArriveBody?
 )
 
@@ -40,7 +40,7 @@ data class ArriveBody(
 @Xml
 data class ArriveItems(
         @Element
-        var item: List<ArriveDTO>
+        var item: List<ArriveDTO>?
 )
 
 @Xml

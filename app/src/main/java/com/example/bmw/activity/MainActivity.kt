@@ -193,7 +193,7 @@ class MainActivity : AppCompatActivity() {
 
                         CoroutineScope(Dispatchers.IO).launch {
                             // 현재 위치가 서울인 경우
-                            if (builder.toString().contains("서울")) {
+                            if (builder.toString().contains("서울") || builder.toString().contains("Seoul")) {
                                 val service = Retrofit.Builder()
                                         .baseUrl(NetworkConstants.BASE_URL_SEOUL)
                                         .addConverterFactory(TikXmlConverterFactory.create(TikXml.Builder().exceptionOnUnreadXml(false).build()))

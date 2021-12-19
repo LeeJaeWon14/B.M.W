@@ -26,11 +26,17 @@ class BusArriveListAdapter(private val arriveList: List<ArriveDTO>?) : RecyclerV
     override fun onBindViewHolder(holder: BusArriveListHolder, position: Int) {
         holder.apply {
             arriveList?.let {
+//                arriveLayout.isVisible = true
+//                tvNoArriveInfo.isVisible = false
+                viewVisibleSet(arriveLayout)
+                viewVisibleSet(tvNoArriveInfo)
                 tvBusName.text = it[position].routeNo.toString()
                 tvBusTime.text = it[position].arrTime.toString()
             } ?: run {
-                arriveLayout.isVisible = false
-                tvNoArriveInfo.isVisible = true
+//                arriveLayout.isVisible = false
+//                tvNoArriveInfo.isVisible = true
+                viewVisibleSet(arriveLayout)
+                viewVisibleSet(tvNoArriveInfo)
             }
         }
     }
@@ -40,5 +46,9 @@ class BusArriveListAdapter(private val arriveList: List<ArriveDTO>?) : RecyclerV
             return@let it.size
         }
         return 1
+    }
+
+    private fun viewVisibleSet(view : View) {
+        view.isVisible = !view.isVisible
     }
 }

@@ -31,6 +31,7 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
     private var seoulList: Array<SeoulDTO>? = null
     private lateinit var context: Context
     private lateinit var arriveInfo: ArriveDTO
+    private var retryCount: Int = 0
     class BusStationListHolder(view: View): RecyclerView.ViewHolder(view) {
         val tvStationName: TextView = view.findViewById(R.id.tv_bus_station_name)
         val rvBusList: RecyclerView = view.findViewById(R.id.rv_bus_list)
@@ -52,17 +53,24 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
                     val call = service.getArriveInfo(NetworkConstants.BUS_STATION_SERVICE_KEY, it[position].cityCode.toString(), it[position].nodeId.toString())
                     call.enqueue(object : Callback<ArriveResponse> {
                         override fun onResponse(call: Call<ArriveResponse>, response: Response<ArriveResponse>) {
+                            MyLogger.e("Rest response is ${response.body()}")
                             response.body()?.body?.items?.item?.let {
                                 layoutManager = LinearLayoutManager(context)
                                 adapter = BusArriveListAdapter(it)
                             } ?: run {
-                                MyLogger.e("Rest response is null")
+                                MyLogger.e("Rest response is null, reqeust is ${call.request()}")
                                 layoutManager = LinearLayoutManager(context)
                                 adapter = BusArriveListAdapter(null)
                             }
                         }
 
                         override fun onFailure(call: Call<ArriveResponse>, t: Throwable) {
+                            if(t.message == context.getString(R.string.str_rest_fail_message_1)) {
+                                if(retryCount < 3) {
+                                    call.clone().enqueue(this)
+                                    retryCount ++
+                                }
+                            }
                             MyLogger.e("Rest failure ${t.message}")
                             MyLogger.e("Rest failure ${call.request()}")
                         }
