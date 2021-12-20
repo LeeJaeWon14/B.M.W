@@ -39,7 +39,7 @@ data class ArriveBody(
 
 @Xml
 data class ArriveItems(
-        @Element
+        @Element(name = "item")
         var item: List<ArriveDTO>?
 )
 
@@ -55,7 +55,7 @@ data class ArriveDTO(
         var routeId: String,
 
         @PropertyElement(name = "routeno")
-        var routeNo: Int,
+        var routeNo: String,
 
         @PropertyElement(name = "routetp")
         var routeTp: String,

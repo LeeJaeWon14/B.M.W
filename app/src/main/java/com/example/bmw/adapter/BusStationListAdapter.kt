@@ -16,6 +16,9 @@ import com.example.bmw.network.dto.SeoulDTO
 import com.example.bmw.network.dto.StationDTO
 import com.example.bmw.network.service.BusService
 import com.example.bmw.util.MyLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -49,32 +52,27 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
             busList?.let {
                 tvStationName.text = it[position].nodeName
                 rvBusList.apply {
-                    val service = RetroClient.getInstance().create(BusService::class.java)
-                    val call = service.getArriveInfo(NetworkConstants.BUS_STATION_SERVICE_KEY, it[position].cityCode.toString(), it[position].nodeId.toString())
-                    call.enqueue(object : Callback<ArriveResponse> {
-                        override fun onResponse(call: Call<ArriveResponse>, response: Response<ArriveResponse>) {
-                            MyLogger.e("Rest response is ${response.body()}")
-                            response.body()?.body?.items?.item?.let {
-                                layoutManager = LinearLayoutManager(context)
-                                adapter = BusArriveListAdapter(it)
-                            } ?: run {
-                                MyLogger.e("Rest response is null, reqeust is ${call.request()}")
-                                layoutManager = LinearLayoutManager(context)
-                                adapter = BusArriveListAdapter(null)
-                            }
-                        }
-
-                        override fun onFailure(call: Call<ArriveResponse>, t: Throwable) {
-                            if(t.message == context.getString(R.string.str_rest_fail_message_1)) {
-                                if(retryCount < 3) {
-                                    call.clone().enqueue(this)
-                                    retryCount ++
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val service = RetroClient.getInstance().create(BusService::class.java)
+                        val call = service.getArriveInfo(NetworkConstants.BUS_STATION_SERVICE_KEY, it[position].cityCode.toString(), it[position].nodeId.toString())
+                        call.enqueue(object : Callback<ArriveResponse> {
+                            override fun onResponse(call: Call<ArriveResponse>, response: Response<ArriveResponse>) {
+//                            MyLogger.e("Rest response is ${response.body()}")
+                                response.body()?.body?.items?.item?.let {
+                                    layoutManager = LinearLayoutManager(context)
+                                    adapter = BusArriveListAdapter(it)
+                                } ?: run {
+                                    MyLogger.e("Rest response is null, reqeust is ${call.request()}")
+                                    layoutManager = LinearLayoutManager(context)
+                                    adapter = BusArriveListAdapter(null)
                                 }
                             }
-                            MyLogger.e("Rest failure ${t.message}")
-                            MyLogger.e("Rest failure ${call.request()}")
-                        }
-                    })
+
+                            override fun onFailure(call: Call<ArriveResponse>, t: Throwable) {
+                                MyLogger.e("Rest failure ${t.message}")
+                            }
+                        })
+                    }
                 }
             }
             // 서울
