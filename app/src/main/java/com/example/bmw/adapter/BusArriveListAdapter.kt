@@ -10,11 +10,13 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bmw.R
 import com.example.bmw.network.dto.ArriveDTO
+import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
 import kotlinx.coroutines.*
 
 class BusArriveListAdapter(private val arriveList: List<ArriveDTO>?) : RecyclerView.Adapter<BusArriveListAdapter.BusArriveListHolder>() {
     private lateinit var context: Context
+    private var preTime: Long = 0
     class BusArriveListHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvBusName: TextView = view.findViewById(R.id.tv_bus_arrive_name)
         val tvBusTime: TextView = view.findViewById(R.id.tv_bus_arrive_time)
@@ -33,16 +35,17 @@ class BusArriveListAdapter(private val arriveList: List<ArriveDTO>?) : RecyclerV
             arriveList?.let {
                 MyLogger.i("This item is >> Bus No.${it[position].routeNo}, position is $position, size is ${it.size}")
                 tvBusName.text = it[position].routeNo.plus(" 번")
-                tvBusTime.text = it[position].arrTime.toString()
+                preTime = it[position].arrTime
                 CoroutineScope(Dispatchers.IO).launch {
                     while(true) {
-                        delay(1000)
-//                        (context as Activity).runOnUiThread {
-//                            tvBusTime.text = (tvBusTime.text.toString().toLong() -1).toString()
-//                        }
                         withContext(Dispatchers.Main) {
-                            tvBusTime.text = (tvBusTime.text.toString().toLong() -1).toString()
+                            tvBusTime.text = run {
+                                preTime -= 1
+                                MyDateUtil.convertSec(preTime)
+                            }
+//                            tvBusTime.text = (tvBusTime.text.toString().toLong() -1).toString()
                         }
+                        delay(1000)
                     }
                 }
             } ?: run {

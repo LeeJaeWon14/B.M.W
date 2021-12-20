@@ -17,17 +17,20 @@ object MyDateUtil {
     fun convertSec(sec: Long) : String {
         when {
             sec >= 3600 -> {
-
+                val hour = sec / 3600
+                val min = (sec - (hour * 3600)) / 60
+                val secd = (sec - (hour * 3600) - (min * 60))
+                return "${hour}시간 ${min}분 ${secd}초"
             }
             sec in 60..3599 -> {
-
+                val min = sec / 60
+                val secd = (sec - (min * 60))
+                return "${min}분 ${secd}초"
             }
             else -> {
-
+                return "${sec}초"
             }
         }
-
-        return ""
     }
 
 

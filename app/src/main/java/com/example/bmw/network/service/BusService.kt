@@ -20,7 +20,7 @@ interface BusService {
         @Query("serviceKey") serviceKey: String,
         @Query("tmX") longitude: Double,
         @Query("tmY") latitude: Double,
-        @Query("radius") radius: Int = 200
+        @Query("radius") radius: Int = 100
     ): Call<ServiceResult>
 
     @Headers("Connection: close")
