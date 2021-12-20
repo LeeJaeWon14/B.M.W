@@ -1,6 +1,5 @@
 package com.example.bmw.adapter
 
-import android.app.Activity
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -12,10 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bmw.R
 import com.example.bmw.network.dto.ArriveDTO
 import com.example.bmw.util.MyLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class BusArriveListAdapter(private val arriveList: List<ArriveDTO>?) : RecyclerView.Adapter<BusArriveListAdapter.BusArriveListHolder>() {
     private lateinit var context: Context
@@ -41,7 +37,10 @@ class BusArriveListAdapter(private val arriveList: List<ArriveDTO>?) : RecyclerV
                 CoroutineScope(Dispatchers.IO).launch {
                     while(true) {
                         delay(1000)
-                        (context as Activity).runOnUiThread {
+//                        (context as Activity).runOnUiThread {
+//                            tvBusTime.text = (tvBusTime.text.toString().toLong() -1).toString()
+//                        }
+                        withContext(Dispatchers.Main) {
                             tvBusTime.text = (tvBusTime.text.toString().toLong() -1).toString()
                         }
                     }
