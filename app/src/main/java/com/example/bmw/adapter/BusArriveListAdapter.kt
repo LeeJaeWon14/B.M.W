@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bmw.R
 import com.example.bmw.network.dto.ArriveDTO
 import com.example.bmw.util.MyDateUtil
-import com.example.bmw.util.MyLogger
 import kotlinx.coroutines.*
 
 class BusArriveListAdapter(private val arriveList_: List<ArriveDTO>?) : RecyclerView.Adapter<BusArriveListAdapter.BusArriveListHolder>() {
@@ -34,7 +33,7 @@ class BusArriveListAdapter(private val arriveList_: List<ArriveDTO>?) : Recycler
     override fun onBindViewHolder(holder: BusArriveListHolder, position: Int) {
         holder.apply {
             arriveList?.let {
-                MyLogger.i("This item is >> Bus No.${it[position].routeNo}, position is $position, size is ${it.size}")
+//                MyLogger.i("This item is >> Bus No.${it[position].routeNo}, position is $position, size is ${it.size}")
                 tvBusName.text = it[position].routeNo.plus(" 번")
                 preTime.add(position, it[position].arrTime)
                 CoroutineScope(Dispatchers.IO).launch {
