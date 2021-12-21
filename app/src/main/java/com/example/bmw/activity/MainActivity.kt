@@ -207,6 +207,7 @@ class MainActivity : AppCompatActivity() {
                                         if (response.isSuccessful) {
                                             MyLogger.i("Rest success, response is ${response.body()}")
                                             seoulList.postValue(response.body()?.msgBody?.itemList)
+                                            Toast.makeText(this@MainActivity, getString(R.string.str_not_supported_seoul), Toast.LENGTH_SHORT).show()
                                         } else {
                                             MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
                                             Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_null_msg), Toast.LENGTH_SHORT).show()
@@ -214,10 +215,9 @@ class MainActivity : AppCompatActivity() {
                                     }
 
                                     override fun onFailure(call: Call<ServiceResult>, t: Throwable) {
-                                        if(t.message == "Missing closing '>' character in </ServiceResult at path /ServiceResult/text()") {
+                                        if (t.message == "Missing closing '>' character in </ServiceResult at path /ServiceResult/text()") {
                                             call.clone().enqueue(this)
-                                        }
-                                        else {
+                                        } else {
                                             Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
                                             MyLogger.e("Rest failure ${t.message}")
                                             MyLogger.e("Rest failure ${call.request()}")

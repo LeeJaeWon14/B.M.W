@@ -15,4 +15,5 @@
     <string name="str_rest_fail_message_1">unexpected end of stream</string>
     <string name="str_rest_fail_message_2">Parameter specified as non-null is null: method kotlin.jvm.internal.Intrinsics.checkNotNullParameter, parameter item</string>
     <string name="str_not_supported_area">지원하지 않는 지역입니다.</string>
+    <string name="str_not_supported_seoul">서울은 아직 지원되지 않습니다.</string>
 </resources>
