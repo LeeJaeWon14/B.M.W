@@ -14,9 +14,10 @@ import com.example.bmw.util.MyDateUtil
 import com.example.bmw.util.MyLogger
 import kotlinx.coroutines.*
 
-class BusArriveListAdapter(private val arriveList: List<ArriveDTO>?) : RecyclerView.Adapter<BusArriveListAdapter.BusArriveListHolder>() {
+class BusArriveListAdapter(private val arriveList_: List<ArriveDTO>?) : RecyclerView.Adapter<BusArriveListAdapter.BusArriveListHolder>() {
+    private val arriveList = arriveList_?.toMutableList()
     private lateinit var context: Context
-    private var preTime: Long = 0
+    private var preTime = mutableListOf<Long>()
     class BusArriveListHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvBusName: TextView = view.findViewById(R.id.tv_bus_arrive_name)
         val tvBusTime: TextView = view.findViewById(R.id.tv_bus_arrive_time)
@@ -35,15 +36,22 @@ class BusArriveListAdapter(private val arriveList: List<ArriveDTO>?) : RecyclerV
             arriveList?.let {
                 MyLogger.i("This item is >> Bus No.${it[position].routeNo}, position is $position, size is ${it.size}")
                 tvBusName.text = it[position].routeNo.plus(" 번")
-                preTime = it[position].arrTime
+                preTime.add(position, it[position].arrTime)
                 CoroutineScope(Dispatchers.IO).launch {
                     while(true) {
                         withContext(Dispatchers.Main) {
-                            tvBusTime.text = run {
-                                preTime -= 1
-                                MyDateUtil.convertSec(preTime)
+                            if(preTime[position] < 1) {
+                                arriveList.removeAt(position)
+                                preTime.removeAt(position)
+                                notifyDataSetChanged()
                             }
+                            else {
+                                tvBusTime.text = run {
+                                    preTime.set(position, preTime[position] -1)
+                                    MyDateUtil.convertSec(preTime[position])
+                                }
 //                            tvBusTime.text = (tvBusTime.text.toString().toLong() -1).toString()
+                            }
                         }
                         delay(1000)
                     }
