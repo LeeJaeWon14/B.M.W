@@ -103,8 +103,8 @@ class MainActivity : AppCompatActivity() {
         binding.apply {
             rvBusStationList.layoutManager = LinearLayoutManager(this@MainActivity)
             slBusStationList.apply {
-                setProgressBackgroundColorSchemeColor(getColor(R.color.purple_500))
-                setColorSchemeColors(getColor(R.color.white))
+                setProgressBackgroundColorSchemeColor(getColor(R.color.primary))
+                setColorSchemeColors(getColor(R.color.primary_dark))
                 setOnRefreshListener {
                     initLocation()
                     isRefreshing = false
@@ -145,6 +145,10 @@ class MainActivity : AppCompatActivity() {
         override fun onLocationChanged(location: Location) {
             viewModel.location.value = location
             Toast.makeText(this@MainActivity, getString(R.string.str_updated_location), Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onProviderDisabled(provider: String) {
+            Toast.makeText(this@MainActivity, "GPS가 꺼져있습니다.", Toast.LENGTH_SHORT).show()
         }
     }
 

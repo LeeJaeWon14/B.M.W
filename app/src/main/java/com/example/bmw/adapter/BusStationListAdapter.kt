@@ -69,7 +69,11 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
                             }
 
                             override fun onFailure(call: Call<ArriveResponse>, t: Throwable) {
-                                MyLogger.e("Rest failure ${t.message}")
+                                if(t.message == context.getString(R.string.str_rest_fail_message_1)) {
+                                    call.clone().enqueue(this)
+                                } else {
+                                    MyLogger.e("Rest failure ${t.message}")
+                                }
                             }
                         })
                     }

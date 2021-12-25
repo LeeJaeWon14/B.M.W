@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bmw.R
 import com.example.bmw.network.dto.ArriveDTO
 import com.example.bmw.util.MyDateUtil
+import com.example.bmw.util.MyLogger
 import kotlinx.coroutines.*
 
 class BusArriveListAdapter(private val arriveList_: List<ArriveDTO>?) : RecyclerView.Adapter<BusArriveListAdapter.BusArriveListHolder>() {
@@ -39,10 +40,12 @@ class BusArriveListAdapter(private val arriveList_: List<ArriveDTO>?) : Recycler
                 CoroutineScope(Dispatchers.IO).launch {
                     while(true) {
                         withContext(Dispatchers.Main) {
+
                             if(preTime[position] < 1) {
                                 arriveList.removeAt(position)
                                 preTime.removeAt(position)
                                 notifyDataSetChanged()
+                                MyLogger.e("item Count $itemCount, preTime size ${preTime.size}, arriveList")
                             }
                             else {
                                 tvBusTime.text = run {
