@@ -187,7 +187,12 @@ class MainActivity : AppCompatActivity() {
                     // get address for subtitle from GeoCoder
                     val builder = StringBuilder()
                     Thread {
-                        val address = Geocoder(this@MainActivity).getFromLocation(it.latitude, it.longitude, 1)[0].getAddressLine(0).toString()
+                        var address: String = ""
+                        try {
+                            address = Geocoder(this@MainActivity).getFromLocation(it.latitude, it.longitude, 1)[0].getAddressLine(0).toString()
+                        } catch (e: Exception) {
+                            MyLogger.e("${e.message}, address = $address")
+                        }
                         MyLogger.e("Now address >> $address")
                         val addressList = address.split(" ")
 
@@ -237,6 +242,7 @@ class MainActivity : AppCompatActivity() {
                                 call?.enqueue(object : Callback<Station> {
                                     override fun onResponse(call: Call<Station>, response: Response<Station>) {
                                         if (response.isSuccessful) {
+                                            MyLogger.i("response is ${response.raw().request()}")
                                             stationList.postValue(response.body()?.body?.items?.item)
                                             listVisibleCheck(null)
                                         } else {
@@ -269,9 +275,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     }.start()
                 }
-
-
-
                 VibrateManager.runVibrate(
                         getSystemService(Context.VIBRATOR_SERVICE) as Vibrator,
                         longArrayOf(100, 200, 100, 200),

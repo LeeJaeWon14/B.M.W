@@ -57,7 +57,6 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
                         val call = service.getArriveInfo(NetworkConstants.BUS_STATION_SERVICE_KEY, it[position].cityCode.toString(), it[position].nodeId.toString())
                         call.enqueue(object : Callback<ArriveResponse> {
                             override fun onResponse(call: Call<ArriveResponse>, response: Response<ArriveResponse>) {
-//                            MyLogger.e("Rest response is ${response.body()}")
                                 response.body()?.body?.items?.item?.let {
                                     layoutManager = LinearLayoutManager(context)
                                     adapter = BusArriveListAdapter(it)
@@ -92,9 +91,5 @@ class BusStationListAdapter() : RecyclerView.Adapter<BusStationListAdapter.BusSt
 
     override fun getItemCount(): Int {
         return (busList?.size ?: seoulList?.size)!!
-    }
-
-    private fun initArriveList(station: StationDTO) {
-
     }
 }

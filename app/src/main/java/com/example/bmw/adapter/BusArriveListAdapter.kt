@@ -11,11 +11,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.bmw.R
 import com.example.bmw.network.dto.ArriveDTO
 import com.example.bmw.util.MyDateUtil
-import com.example.bmw.util.MyLogger
 import kotlinx.coroutines.*
 
 class BusArriveListAdapter(private val arriveList_: List<ArriveDTO>?) : RecyclerView.Adapter<BusArriveListAdapter.BusArriveListHolder>() {
-    private val arriveList = arriveList_?.toMutableList()
+    private val arriveList = arriveList_?.let { checkDistinct(it) }
     private lateinit var context: Context
     private var preTime = mutableListOf<Long>()
     class BusArriveListHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -34,28 +33,25 @@ class BusArriveListAdapter(private val arriveList_: List<ArriveDTO>?) : Recycler
     override fun onBindViewHolder(holder: BusArriveListHolder, position: Int) {
         holder.apply {
             arriveList?.let {
-//                MyLogger.i("This item is >> Bus No.${it[position].routeNo}, position is $position, size is ${it.size}")
                 tvBusName.text = it[position].routeNo.plus(" 번")
                 preTime.add(position, it[position].arrTime)
-                CoroutineScope(Dispatchers.IO).launch {
+                CoroutineScope(Dispatchers.Default).launch {
                     while(true) {
                         withContext(Dispatchers.Main) {
-
                             if(preTime[position] < 1) {
+                                notifyDataSetChanged()
                                 arriveList.removeAt(position)
                                 preTime.removeAt(position)
-                                notifyDataSetChanged()
-                                MyLogger.e("item Count $itemCount, preTime size ${preTime.size}, arriveList")
+                                // TODO: Activity에서 Adapter를 새로고침하기 ..?
                             }
                             else {
                                 tvBusTime.text = run {
                                     preTime.set(position, preTime[position] -1)
                                     MyDateUtil.convertSec(preTime[position])
                                 }
-//                            tvBusTime.text = (tvBusTime.text.toString().toLong() -1).toString()
                             }
+                            delay(1000)
                         }
-                        delay(1000)
                     }
                 }
             } ?: run {
@@ -72,5 +68,19 @@ class BusArriveListAdapter(private val arriveList_: List<ArriveDTO>?) : Recycler
 
     private fun viewVisibleSet(view : View) {
         view.isVisible = !view.isVisible
+    }
+
+    private fun checkDistinct(arriveList: List<ArriveDTO>) : MutableList<ArriveDTO> {
+        var prevDto: ArriveDTO? = null
+        val result: MutableList<ArriveDTO> = mutableListOf()
+        for(idx in arriveList.indices) {
+            if(arriveList[idx].routeNo == prevDto?.routeNo) {
+                result.add(arriveList[idx])
+            }
+            else {
+                prevDto = arriveList[idx]
+            }
+        }
+        return result
     }
 }
