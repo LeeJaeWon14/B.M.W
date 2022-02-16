@@ -15,6 +15,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -211,10 +212,10 @@ class MainActivity : AppCompatActivity() {
                                         if (response.isSuccessful) {
                                             MyLogger.i("Rest success, response is ${response.body()}")
                                             seoulList.postValue(response.body()?.msgBody?.itemList)
-                                            Toast.makeText(this@MainActivity, getString(R.string.str_not_supported_seoul), Toast.LENGTH_SHORT).show()
+                                            listVisibleCheck(getString(R.string.str_not_supported_seoul))
                                         } else {
                                             MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
-                                            Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_null_msg), Toast.LENGTH_SHORT).show()
+                                            listVisibleCheck(getString(R.string.str_get_near_station_null_msg))
                                         }
                                     }
 
@@ -222,7 +223,7 @@ class MainActivity : AppCompatActivity() {
                                         if (t.message == "Missing closing '>' character in </ServiceResult at path /ServiceResult/text()") {
                                             call.clone().enqueue(this)
                                         } else {
-                                            Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
+                                            listVisibleCheck(getString(R.string.str_get_near_station_fail_msg))
                                             MyLogger.e("Rest failure ${t.message}")
                                             MyLogger.e("Rest failure ${call.request()}")
                                         }
@@ -236,11 +237,11 @@ class MainActivity : AppCompatActivity() {
                                 call?.enqueue(object : Callback<Station> {
                                     override fun onResponse(call: Call<Station>, response: Response<Station>) {
                                         if (response.isSuccessful) {
-//                                            MyLogger.i("Rest success, response is ${response.body()}")
                                             stationList.postValue(response.body()?.body?.items?.item)
+                                            listVisibleCheck(null)
                                         } else {
                                             MyLogger.e("Rest respone not success, code is ${response.code()} and request is here ${response.raw().request()}")
-                                            Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_null_msg), Toast.LENGTH_SHORT).show()
+                                            listVisibleCheck(getString(R.string.str_get_near_station_null_msg))
                                         }
                                     }
 
@@ -252,12 +253,12 @@ class MainActivity : AppCompatActivity() {
                                                 call.clone().enqueue(this)
                                             }
                                             getString(R.string.str_rest_fail_message_2) -> {
-                                                // 확인된 미지원 지역: 부산
-                                                Toast.makeText(this@MainActivity, getString(R.string.str_not_supported_area), Toast.LENGTH_SHORT).show()
+                                                // Checked not supported area: 부산
+                                                listVisibleCheck(getString(R.string.str_not_supported_area))
                                                 binding.rvBusStationList.adapter = null
                                             }
                                             else -> {
-                                                Toast.makeText(this@MainActivity, getString(R.string.str_get_near_station_fail_msg), Toast.LENGTH_SHORT).show()
+                                                listVisibleCheck(getString(R.string.str_get_near_station_fail_msg))
                                                 MyLogger.e("Rest failure ${t.message}")
                                                 MyLogger.e("Rest failure ${call.request()}")
                                             }
@@ -289,6 +290,21 @@ class MainActivity : AppCompatActivity() {
             arriveList.observe(this@MainActivity, Observer {
 
             })
+        }
+    }
+
+    private fun listVisibleCheck(msg: String?) {
+        msg?.let {
+            binding.apply {
+                llBusStationList.isVisible = false
+                tvErrMsg.isVisible = true
+                tvErrMsg.text = msg
+            }
+        } ?: run {
+            binding.apply {
+                llBusStationList.isVisible = true
+                tvErrMsg.isVisible = false
+            }
         }
     }
 }
